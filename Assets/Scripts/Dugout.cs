@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Team
+public class Dugout : MonoBehaviour
 {
-
+    public List<Transform> OnDeckPositions;
 }
