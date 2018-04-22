@@ -11,14 +11,4 @@ public class HitterOptionsPanel : MonoBehaviour
     public OptionButton BuntOption;
     public OptionButton UsePotionOption;
     public OptionButton CastSpellOption;
-
-
-    public Image CurrentOptionImage;
-
-    public void SetOptionIndex(int index)
-    {
-        this.CurrentOptionImage.transform.SetParent(this.AllOptionButtons[index].transform, false);
-        this.CurrentOptionImage.rectTransform.anchoredPosition = new Vector2(-5f, 0f);
-    }
-
 }

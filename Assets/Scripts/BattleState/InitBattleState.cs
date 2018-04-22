@@ -19,7 +19,7 @@ public class InitBattleState : BaseBattleState
 
         for (int i = 0; i < this.Controller.HomeTeamPlayers.Count; i++)
         {
-            if (i < 3) // testing, switch back to zero
+            if (i == 0) // testing, switch back to zero
             {
                 if (i == 0) this.Controller.MovePlayerToBase(this.Controller.HomeTeamPlayers[index], this.Controller.HomePlate);
 
@@ -30,7 +30,7 @@ public class InitBattleState : BaseBattleState
             }
             else
             {
-                this.Controller.MovePlayerToDugout(this.Controller.HomeTeamPlayers[index], i - 1);
+                this.Controller.MovePlayerToDugout(this.Controller.HomeTeamPlayers[index]);
             }
 
             if (++index >= this.Controller.HomeTeamPlayers.Count)

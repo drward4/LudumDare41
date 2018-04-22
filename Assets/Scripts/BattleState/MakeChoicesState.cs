@@ -21,10 +21,16 @@ public class MakeChoicesState : BaseBattleState
     {
         this.CurrentOptionIndex = index;
 
+
         if (this.CurrentBaseIndex == 0)
         {
-            this.Controller.OptionsPanel.HitterOptionsPanel.SetOptionIndex(this.CurrentOptionIndex);
+            this.Controller.OptionsPanel.CurrentOptionImage.transform.SetParent(this.Controller.OptionsPanel.HitterOptionsPanel.AllOptionButtons[index].transform, false);
         }
+        else
+        {
+            this.Controller.OptionsPanel.CurrentOptionImage.transform.SetParent(this.Controller.OptionsPanel.RunnerOptionsPanel.AllOptionButtons[index].transform, false);
+        }
+        this.Controller.OptionsPanel.CurrentOptionImage.rectTransform.anchoredPosition = new Vector2(-5f, 0f);
     }
 
 
@@ -62,8 +68,17 @@ public class MakeChoicesState : BaseBattleState
     {
         base.EnterState();
 
+        this.Controller.CurrentBaseIndicator.gameObject.SetActive(true);
+
         this.SetCurrentBase(0);
         this.SetCurrentOption(0);
+
+        for (int i = 0; i < this.Controller.HomeTeamPlayers.Count; i++)
+        {
+            this.Controller.HomeTeamPlayers[i].CurrentAction = BattleAction.Pass;
+            this.Controller.HomeTeamPlayers[i].StopWalking();
+        }
+
         this.Controller.OptionsPanel.HitterOptionsPanel.SwingOption.Button.onClick.AddListener(this.SwingOptionPressed);
         this.Controller.OptionsPanel.HitterOptionsPanel.PassOption.Button.onClick.AddListener(this.PassOptionPressed);
         this.Controller.OptionsPanel.HitterOptionsPanel.BuntOption.Button.onClick.AddListener(this.BuntOptionPressed);
@@ -82,6 +97,7 @@ public class MakeChoicesState : BaseBattleState
     {
         base.ExitState();
 
+        this.Controller.CurrentBaseIndicator.gameObject.SetActive(false);
         this.Controller.OptionsPanel.HitterOptionsPanel.SwingOption.Button.onClick.RemoveListener(this.SwingOptionPressed);
         this.Controller.OptionsPanel.HitterOptionsPanel.PassOption.Button.onClick.RemoveListener(this.PassOptionPressed);
         this.Controller.OptionsPanel.HitterOptionsPanel.BuntOption.Button.onClick.RemoveListener(this.BuntOptionPressed);
@@ -96,6 +112,22 @@ public class MakeChoicesState : BaseBattleState
     }
 
 
+    protected bool IsFirstLevelAction(Base aBase)
+    {
+        return aBase.CurrentPlayer != null && 
+            (aBase.CurrentPlayer.CurrentAction == BattleAction.CastSpell ||
+             aBase.CurrentPlayer.CurrentAction == BattleAction.UsePotion);
+    }
+
+
+    protected bool IsSecondLevelAction(Base aBase)
+    {
+        return aBase.CurrentPlayer != null &&
+            (aBase.CurrentPlayer.CurrentAction == BattleAction.Lead ||
+             aBase.CurrentPlayer.CurrentAction == BattleAction.Steal);
+    }
+
+
     protected void NextBase()
     {
         ++this.CurrentBaseIndex;
@@ -103,8 +135,34 @@ public class MakeChoicesState : BaseBattleState
 
         if (this.CurrentBaseIndex >= 4 || this.CurrentBase.CurrentPlayer == null)
         {
+            Queue<Base> baseActionOrder = new Queue<Base>(4);
+
+            // Build queue so that players first use potions or cast spells, then lead or steal, and finally let the pitch happen and process the hitter action
+            if (this.IsFirstLevelAction(this.Controller.FirstBase)) baseActionOrder.Enqueue(this.Controller.FirstBase);
+            if (this.IsFirstLevelAction(this.Controller.SecondBase)) baseActionOrder.Enqueue(this.Controller.SecondBase);
+            if (this.IsFirstLevelAction(this.Controller.ThirdBase)) baseActionOrder.Enqueue(this.Controller.ThirdBase);
+
+            if (this.IsSecondLevelAction(this.Controller.FirstBase)) baseActionOrder.Enqueue(this.Controller.FirstBase);
+            if (this.IsSecondLevelAction(this.Controller.SecondBase)) baseActionOrder.Enqueue(this.Controller.SecondBase);
+            if (this.IsSecondLevelAction(this.Controller.ThirdBase)) baseActionOrder.Enqueue(this.Controller.ThirdBase);
+
+            // If the hitter opts to use a potion or something, do that before the pitch comes
+            if (this.IsFirstLevelAction(this.Controller.HomePlate) || this.IsSecondLevelAction(this.Controller.HomePlate))
+            {
+                baseActionOrder.Enqueue(this.Controller.HomePlate);
+                baseActionOrder.Enqueue(this.Controller.PitchersMound);
+            }
+            else
+            {
+                baseActionOrder.Enqueue(this.Controller.PitchersMound);
+                baseActionOrder.Enqueue(this.Controller.HomePlate);
+            }
+
             // Start the Pitch
+            this.Controller.PitchersMound.CurrentPlayer.CurrentAction = BattleAction.ThrowFastBall;
+
             Debug.Log("Pitch!");
+            this.Controller.SwitchToState(new PerformActionState(this.Controller, baseActionOrder));
         }
         else
         {
@@ -118,6 +176,7 @@ public class MakeChoicesState : BaseBattleState
     protected void SwingOptionPressed()
     {
         Debug.Log("SwingOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.Swing;
         this.SetCurrentOption(0);
         this.NextBase();
     }
@@ -126,6 +185,7 @@ public class MakeChoicesState : BaseBattleState
     protected void PassOptionPressed()
     {
         Debug.Log("PassOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.Pass;
         this.SetCurrentOption(1);
         this.NextBase();
     }
@@ -134,6 +194,7 @@ public class MakeChoicesState : BaseBattleState
     protected void BuntOptionPressed()
     {
         Debug.Log("BuntOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.Bunt;
         this.SetCurrentOption(2);
         this.NextBase();
     }
@@ -142,6 +203,7 @@ public class MakeChoicesState : BaseBattleState
     protected void LeadOptionPressed()
     {
         Debug.Log("LeadOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.Lead;
         this.SetCurrentOption(1);
         this.NextBase();
     }
@@ -150,6 +212,7 @@ public class MakeChoicesState : BaseBattleState
     protected void StealOptionPressed()
     {
         Debug.Log("StealOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.Steal;
         this.SetCurrentOption(2);
         this.NextBase();
     }
@@ -158,6 +221,7 @@ public class MakeChoicesState : BaseBattleState
     protected void UsePotionOptionPressed()
     {
         Debug.Log("UsePotionOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.UsePotion;
         this.SetCurrentOption(3);
     }
 
@@ -165,6 +229,7 @@ public class MakeChoicesState : BaseBattleState
     protected void CastSpellOptionPressed()
     {
         Debug.Log("CastSpellOptionPressed");
+        this.CurrentBase.CurrentPlayer.CurrentAction = BattleAction.CastSpell;
         this.SetCurrentOption(4);
     }
 

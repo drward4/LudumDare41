@@ -7,4 +7,5 @@ public class OptionsPanel : MonoBehaviour
 {
     public HitterOptionsPanel HitterOptionsPanel;
     public RunnerOptionsPanel RunnerOptionsPanel;
+    public Image CurrentOptionImage;
 }

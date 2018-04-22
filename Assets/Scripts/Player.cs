@@ -6,6 +6,7 @@ public class Player : MonoBehaviour
 {
     public SpriteRenderer CharacterRenderer;
     public Animator AnimatorController;
+    public BattleAction CurrentAction;
 
     public void StartWalking()
     {

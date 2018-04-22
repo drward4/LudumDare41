@@ -3,6 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum BattleAction
+{
+    Pass,
+    Swing,
+    Bunt,
+    Lead,
+    Steal,
+    UsePotion,
+    CastSpell,
+    ThrowFastBall,
+    ThrowCurveBall,
+    ThrowFireBall
+};
+
+
 public class BattleController : MonoBehaviour
 {
     public List<Player> HomeTeamPlayers;
@@ -13,7 +28,10 @@ public class BattleController : MonoBehaviour
     public Base FirstBase;
     public Base SecondBase;
     public Base ThirdBase;
+    public Base PitchersMound;
 
+    public CanvasGroup ActionWindowPanel;
+    public Text CurrentActionLabel;
     public OptionsPanel OptionsPanel;
     public Image CurrentBaseIndicator;
 
@@ -37,9 +55,9 @@ public class BattleController : MonoBehaviour
 
 
 
-    public void MovePlayerToDugout(Player player, int positionIndex)
+    public void MovePlayerToDugout(Player player)
     {
-        player.transform.SetParent(this.Dugout.OnDeckPositions[positionIndex].transform, false);
+        this.Dugout.PushPlayer(player);
         player.CharacterRenderer.flipX = false;
     }
 
